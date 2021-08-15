@@ -12,10 +12,12 @@ import fire
 
 
 def get_idx_closest(v, values):
-      idx = np.argmin(np.abs(values -v))
-      return idx
+    """ Returns the index of the closest element of values to the scalar v. """
+    idx = np.argmin(np.abs(values -v))
+    return idx
   
 def normalize(a, bot_quant=0, top_quant=1, gamma=1):
+    """ Normalizes a gray level image."""
     
     a = a**(1/gamma)
     if bot_quant>0 and top_quant<1:
@@ -29,6 +31,14 @@ def normalize(a, bot_quant=0, top_quant=1, gamma=1):
 
 
 def compute_lums(outfile):
+    """ Generates a file containing luminosity mesures of the characters.
+
+    Parameters
+    ----------
+    outfile : str
+        DESCRIPTION.
+
+    """
     size = 28
     font                   = cv2.FONT_HERSHEY_SIMPLEX()
     bottomLeftCornerOfText = (1, int(1.6*size),)
@@ -37,7 +47,7 @@ def compute_lums(outfile):
     lineType               = 2
     
     NUM_PRINTABLE = 95
-      
+    lums = np.zeros(NUM_PRINTABLE = 95)
 
     for i, char in enumerate(string.printable[:NUM_PRINTABLE]):
         img = 255*np.ones((2*size, size,3), np.uint8)
@@ -47,29 +57,27 @@ def compute_lums(outfile):
             fontScale,
             fontColor,
             lineType)
-        cv2.imshow("letter", cv2.resize(img, (100, 200)))
-        cv2.waitKey(1000)
         lums[i]= np.mean(img)
 
     lums_norm = normalize(lums)
-    np.savetxt("outfile", lums_norm)
+    np.savetxt(outfile, lums_norm)
 
 
 def image_to_ascii(src_image, outfile, line_size=120, contrast_strength=0.01, gamma=1):
     """
-    Convert an image (formats supported by openCV) to a ascii art text file
+    Converts an image (formats supported by openCV) to a ascii art text file.
 
     Parameters
     ----------
-    src_image : TYPE
-        source image.
-    outfile : TYPE
-        path to output file.
-    line_size : TYPE, optional
+    src_image : str
+        path to the source image.
+    outfile : str
+        path to output text file. (Be careful, You should use a monospace font to see the result properly).
+    line_size : int, optional
         Line length in the output text file (controls the resolution). The default is 120.
-    contrast_strength : TYPE, optional
+    contrast_strength : float, optional
         Increases contrast, from 0 (no change) to 0.5. The default is 0.01.
-    gamma : TYPE, optional
+    gamma : float, optional
         gamma correction exponent. The default is 1.
 
     Returns
@@ -87,15 +95,17 @@ def image_to_ascii(src_image, outfile, line_size=120, contrast_strength=0.01, ga
     ratio = float(height)/width
     print("Source image: height: {}, width: {}, ratio {:.2f}".format(height, width, ratio))
     
-    n_rows = int(0.7*line_size*ratio)
+    n_rows = int(0.6*line_size*ratio)
     print("Output image: n rows: {}, line length: {}, ratio {:.2f}".format(
         n_rows, line_size, n_rows/line_size))
 
 
-    im_resized = cv2.resize(im_gray, (line_size, n_rows))
+    
     im_norm_clip = normalize(cv2.resize(im_gray/255, (line_size, n_rows)), 
                              bottom_quantile, top_quantile, gamma)
-    
+
+    ## Uncomment to see the image before the conversion
+    # im_resized = cv2.resize(im_gray, (line_size, n_rows))
     # fig, ax = plt.subplots(1, 2)
     # ax[0].imshow(im_resized , cmap="gray")
     # ax[0].set_title("resized")
@@ -114,10 +124,6 @@ def image_to_ascii(src_image, outfile, line_size=120, contrast_strength=0.01, ga
     with open(outfile, "w") as f:
         f.write(text)
         
-# image_to_ascii("joconde.jpg", "joconde.txt",
-#                line_size=240, 
-#                contrast_strength=0.05, 
-#                gamma=0.6)
 
 if __name__=="__main__":
     fire.Fire(image_to_ascii)
